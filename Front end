@@ -1,0 +1,54 @@
+@page "/login"
+@inject HttpClient Http
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+<h3>Login</h3>
+
+<div>
+    <input placeholder="Username" @bind="username" />
+</div>
+<div>
+    <input placeholder="Password" type="password" @bind="password" />
+</div>
+<div>
+    <button @onclick="HandleLogin">Login</button>
+</div>
+
+@if (!string.IsNullOrEmpty(error))
+{
+    <p style="color:red">@error</p>
+}
+
+@code {
+    string username = "";
+    string password = "";
+    string error = "";
+
+    async Task HandleLogin()
+    {
+        var loginData = new { username = username, password = password };
+
+        var response = await Http.PostAsJsonAsync("api/auth/login", loginData);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<TokenResult>();
+
+            if (result != null && !string.IsNullOrEmpty(result.token))
+            {
+                await JS.InvokeVoidAsync("localStorage.setItem", "token", result.token);
+                Nav.NavigateTo("/dashboard");
+            }
+        }
+        else
+        {
+            error = "Invalid username or password.";
+        }
+    }
+
+    public class TokenResult
+    {
+        public string token { get; set; }
+    }
+}
