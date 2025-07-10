@@ -1,0 +1,26 @@
+@page "/dashboard"
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+<h3>Dashboard</h3>
+
+<canvas id="myChart"></canvas>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var token = await JS.InvokeAsync<string>("localStorage.getItem", "token");
+
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                // Redirect to login if token is missing
+                Nav.NavigateTo("/login");
+                return;
+            }
+
+            await JS.InvokeVoidAsync("renderChart");
+        }
+    }
+}
